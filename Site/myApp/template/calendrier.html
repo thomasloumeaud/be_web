@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+
+<head>
+    <title> Getting started with dhtmlxScheduler</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.js"></script>
+    <link href="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler_material.css" rel="stylesheet" type="text/css"
+        charset="utf-8">
+    <style>
+        html,
+        body {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    {% if info and info == "addEventOK" %}
+        <div class="alert alert-success text-center">
+            Nouveau membre inséré
+        </div>
+    {% endif %}
+    {% if info and info == "addEventProblem" %}
+        <div class="alert alert-danger text-center">
+            Problème insertion du nouveau membre
+        </div>
+    {% endif %}
+    <div id="scheduler_here" class="dhx_cal_container" style='width:100%; height:100%;'>
+        <div class="dhx_cal_navline">
+            <div class="dhx_cal_prev_button">&nbsp;</div>
+            <div class="dhx_cal_next_button">&nbsp;</div>
+            <div class="dhx_cal_today_button"></div>
+            <div class="dhx_cal_date"></div>
+            <div class="dhx_cal_tab" name="day_tab"></div>
+            <div class="dhx_cal_tab" name="week_tab"></div>
+            <div class="dhx_cal_tab" name="month_tab"></div>
+        </div>
+        <div class="dhx_cal_header"></div>
+        <div class="dhx_cal_data"></div>
+    </div>
+    <script>
+        scheduler.init("scheduler_here", new Date(2019, 0, 20), "week");
+        scheduler.setLoadMode("day");
+        
+        // load data from the backend
+        fetch('/load_events', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: new URLSearchParams(),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+         
+        console.log(data)
+        scheduler.parse(data,"json")
+    })
+
+        .catch((err) => console.log(err))
+
+        //ajouter evenements dans la BDD
+        scheduler.attachEvent("onEventCreated", function(id,e){
+            //any custom logic here
+            //e.text e.start_date e.end_date e.color
+            fetch('/create_events', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                body: new URLSearchParams({text:e.text,start_date:e.start_date,end_date:e.end_date}),
+            })
+    
+            .catch((err) => console.log(err))
+        });
+
+        scheduler.attachEvent("onEventDeleted", function(id,ev){
+            // custom code
+        });
+
+        scheduler.attachEvent("onEventChanged", function(id,ev){
+            //any custom logic here
+        });
+        
+    </script>
+</body>
+
+</html>
